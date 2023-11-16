@@ -53,6 +53,11 @@ def get_processed_data ():
         'Internal' : 0,
         'External' : 1
         })
+    df4[['FraudFound']] = df4[['FraudFound']].replace({
+        'No' : 0,
+        'Yes' : 1
+        })
+
 
     df4.to_csv('processed_data.csv', index=False)
 
