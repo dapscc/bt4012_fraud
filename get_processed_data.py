@@ -3,7 +3,7 @@ from category_encoders.ordinal import OrdinalEncoder
 from category_encoders.one_hot import OneHotEncoder
 from sklearn.model_selection import train_test_split
 
-def get_processed_data ():
+def get_processed_data():
     ## Global data preprocessing
     df = pd.read_csv("carclaims.csv")
     df = df.drop(columns=['PolicyNumber',"PolicyType"])
