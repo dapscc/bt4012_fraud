@@ -24,6 +24,8 @@ def ncr(X_train, y_train):
     y_copy = y_copy.replace("Yes", 1)
     y_copy = y_copy.replace("No", 0)
     X_ncr, y_ncr = undersample.fit_resample(X_train, y_copy)
-    y_ncr = y_ncr.replace(1, "Yes")
-    y_ncr = y_ncr.replace(0, "No")
+    # y_ncr = y_ncr.replace("Yes", 1)
+    # y_ncr = y_ncr.replace("No", 0)
+    # y_ncr = y_ncr.replace(1, "Yes")
+    # y_ncr = y_ncr.replace(0, "No")
     return X_ncr, y_ncr
