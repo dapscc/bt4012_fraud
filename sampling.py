@@ -4,17 +4,17 @@ from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import NeighbourhoodCleaningRule
 
 def undersample(X_train, y_train):
-    undersampled_data = RandomUnderSampler(sampling_strategy='majority')
+    undersampled_data = RandomUnderSampler(sampling_strategy='majority', random_state=42)
     X_under, y_under = undersampled_data.fit_resample(X_train, y_train)
     return X_under, y_under
 
 def oversample(X_train, y_train):
-    oversampled_data = RandomOverSampler(sampling_strategy='minority')
+    oversampled_data = RandomOverSampler(sampling_strategy='minority', random_state=42)
     X_over, y_over = oversampled_data.fit_resample(X_train, y_train)
     return X_over, y_over
 
 def smote(X_train, y_train):
-    smote_data = SMOTE()
+    smote_data = SMOTE(random_state=42)
     X_smote, y_smote = smote_data.fit_resample(X_train, y_train)
     return X_smote, y_smote
 
