@@ -3,3 +3,6 @@ __pycache__/
 
 ## Input data
 *.csv
+
+## Training output
+fsl_logs/
