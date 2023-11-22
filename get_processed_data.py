@@ -2,6 +2,7 @@ import pandas as pd
 from category_encoders.ordinal import OrdinalEncoder
 from category_encoders.one_hot import OneHotEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
 def get_processed_data():
     ## Global data preprocessing
@@ -70,5 +71,10 @@ def get_processed_data():
     print("Training set shape:", X_train.shape, y_train.shape)
     print("Validation set shape:", X_val.shape, y_val.shape)
     print("Test set shape:", X_test.shape, y_test.shape)
+
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_val = scaler.transform(X_val)
+    X_test = scaler.transform(X_test)
 
     return df4, X_train, y_train, X_val, y_val, X_test, y_test
