@@ -69,8 +69,8 @@ def evaluate_model (model: nn.Module, data_loader: DataLoader, device = 'cpu'):
                     actual_lst.append(act.item())
 
                 ## Use results to get performance metrics (on rolling basis)
-                _, _, _, _, f1_score = get_metrics(actual_lst, predicted_lst, pos_label = 1, neg_label = 0)
+                accuracy, precision, recall, specificity, f1_score = get_metrics(actual_lst, predicted_lst, pos_label = 1, neg_label = 0)
 
-                tqdm_eval.set_postfix(f1 = f1_score)
+                tqdm_eval.set_postfix(f1 = f1_score, recall = recall)
 
-    return actual_lst, predicted_lst, f1_score
+    return actual_lst, predicted_lst, accuracy, precision, recall, specificity, f1_score
