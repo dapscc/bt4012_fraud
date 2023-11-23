@@ -13,10 +13,10 @@ def get_processed_data():
     
     ## Feature Creation
     # Weekend Feature
-    df4["Weekend"] = df4["DayOfWeek"].apply(lambda x: 1 if x in ["Saturday", "Sunday"] else 0)
+    df["Weekend"] = df["DayOfWeek"].apply(lambda x: 1 if x in ["Saturday", "Sunday"] else 0)
     
     # Accident Prone age groups based on https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/810853
-    df4["AccidentProneAge"] = df4["AgeOfPolicyHolder"].apply(lambda x: 1 if (16 <= x <= 25 | x > 65) else 0)
+    df["AccidentProneAge"] = df["Age"].apply(lambda x: 1 if (16 <= int(x) <= 25 | int(x) > 65) else 0)
     
     
     ## Encoding ordinal features
@@ -43,7 +43,7 @@ def get_processed_data():
     df2 = ord_encoder.fit_transform(df2)
 
     ## Encoding nominal features
-    onehot = OneHotEncoder(cols=['Make', 'MaritalStatus', 'VehicleCategory', 'BasePolicy'], use_cat_names=True, return_df=True) 
+    onehot = OneHotEncoder(cols=["Make",'MaritalStatus', 'VehicleCategory', 'BasePolicy'], use_cat_names=True, return_df=True) 
     df3 = onehot.fit_transform(df2)
 
     df4 = df3.copy()
@@ -69,6 +69,9 @@ def get_processed_data():
         'Yes' : 1
         })
 
+    # df_binary_encoded = pd.get_dummies(df4['Make'], prefix='Make')
+    # df4 = pd.concat([df4, df_binary_encoded], axis=1)
+    # df4 = df4.drop('Make', axis=1)
     
     df4.to_csv('processed_data.csv', index=False)
 
