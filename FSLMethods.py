@@ -1,3 +1,5 @@
+import pandas as pd
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -8,6 +10,55 @@ from tqdm import tqdm
 from statistics import mean
 
 from show_metrics import show_metrics, get_metrics
+from get_processed_data import get_processed_data
+from sampling import undersample, oversample, smote
+from FSLDataset import FSLDataset
+
+
+## Method to sample data
+def get_sampled_data (X, y, sampling_method):
+    new_X, new_y = None, None
+    
+    if sampling_method == 'oversampling':
+        new_X, new_y = oversample(X, y)
+    elif sampling_method == 'undersampling':
+        new_X, new_y = undersample(X, y)
+    else:
+        new_X, new_y = smote(X, y)
+
+    return new_X, new_y
+
+
+## Form the required datasets
+def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test):
+
+    train_df = pd.DataFrame(X_train)
+    y_train = y_train.reset_index(drop = True)
+    train_df['Fraud'] = y_train
+
+    validation_df = pd.DataFrame(X_val)
+    y_val = y_val.reset_index(drop = True)
+    validation_df['Fraud'] = y_val
+
+    test_df = pd.DataFrame(X_test)
+    y_test = y_test.reset_index(drop = True)
+    test_df['Fraud'] = y_test
+
+    train_set = FSLDataset(train_df)
+    validation_set = FSLDataset(validation_df)
+
+    return train_set, validation_set
+
+
+## Method to help tuner get data
+## TODO: Look for better solutions...
+def get_datasets_for_tuner ():
+
+    _, X_train, y_train, X_val, y_val, X_test, y_test = get_processed_data()
+
+    train_set, validation_set = form_datasets(X_train, y_train, X_val, y_val, X_test, y_test)
+
+    return train_set, validation_set
 
 
 ## Represents one epoch / episode of multiple tasks
@@ -74,3 +125,9 @@ def evaluate_model (model: nn.Module, data_loader: DataLoader, device = 'cpu'):
                 tqdm_eval.set_postfix(f1 = f1_score, recall = recall)
 
     return actual_lst, predicted_lst, accuracy, precision, recall, specificity, f1_score
+
+
+## Method to show performance of best model
+def FSL_main_method ():
+
+    return

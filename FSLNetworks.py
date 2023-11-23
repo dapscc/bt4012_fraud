@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from easyfsl.methods import FewShotClassifier, PrototypicalNetworks
+
 ## TODO: Review implementation
     ## Can probably use EasyFSL's class, but implement own feature extractor
     ## Possible options for backbone: ... (Maybe can make do without?)
@@ -46,3 +48,23 @@ class DummyNetwork(nn.Module):
         h = self.linear1(input_array)
         y_pred = self.linear2(h)
         return y_pred
+    
+
+## Wrapper that feeds hyperparams into FSL model to facilitate tuning
+    ## May not be necessary...
+class FSLNetworkWrapper ():
+    def __init__(self) -> None:
+        pass
+
+    
+    ## Required method for sklearn
+    def fit (self, X, y):
+
+        return
+    
+
+    ## Required method for sklearn
+    def predict (self, X):
+
+        return self.model(X)
+    
