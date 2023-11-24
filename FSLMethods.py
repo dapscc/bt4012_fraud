@@ -48,7 +48,7 @@ def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test):
     validation_set = FSLDataset(validation_df)
     test_set = FSLDataset(test_df)
 
-    return train_set, validation_set, test_df
+    return train_set, validation_set, test_set
 
 
 ## Method to help tuner get data

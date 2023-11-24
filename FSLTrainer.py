@@ -105,8 +105,8 @@ class FSLTrainer:
 
         ## Retrieve the best model
         _, _ = model.load_state_dict(best_state)
-        print(f'Best f1-score after {n_epochs} epochs of training: {best_f1_score}')
-        print(f'Best recall after {n_epochs} epochs of training: {best_recall}')
+        # print(f'Best f1-score after {n_epochs} epochs of training: {best_f1_score}')
+        # print(f'Best recall after {n_epochs} epochs of training: {best_recall}')
 
         return model, best_f1_score, best_recall
 
@@ -156,10 +156,10 @@ class FSLTrainer:
         n_test_tasks = 100
         
         ## Preparing data
-        test_samplier = TaskSampler(dataset = self.test_set, n_way = n_way, n_shot = n_shot,
+        test_sampler = TaskSampler(dataset = self.test_set, n_way = n_way, n_shot = n_shot,
                                     n_query = n_query, n_tasks = n_test_tasks)
-        test_loader = DataLoader(dataset = self.test_set, batch_sampler = test_samplier, pin_memory = True,
-                                collate_fn = test_samplier.episodic_collate_fn)
+        test_loader = DataLoader(dataset = self.test_set, batch_sampler = test_sampler, pin_memory = True,
+                                collate_fn = test_sampler.episodic_collate_fn)
         
         ## Preparing model
         backbone = FeatureExtractor(in_dim = len(self.test_set.dataframe.columns) - 1, hidden_dim = 256, out_dim = config['embedding_size'])
