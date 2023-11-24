@@ -10,7 +10,15 @@ def get_processed_data():
     df = df.drop(columns=['PolicyNumber',"PolicyType"])
     df['Age'] =df['Age'].replace({0:16.5})
     df = df[df["MonthClaimed"]!='0']
-
+    
+    ## Feature Creation
+    # Weekend Feature
+    df["Weekend"] = df["DayOfWeek"].apply(lambda x: 1 if x in ["Saturday", "Sunday"] else 0)
+    
+    # Accident Prone age groups based on https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/810853
+    df["AccidentProneAge"] = df["Age"].apply(lambda x: 1 if (16 <= int(x) <= 25 | int(x) > 65) else 0)
+    
+    
     ## Encoding ordinal features
     col_ordering = [{'col':'Month','mapping':{'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}},
         {'col':'DayOfWeek','mapping':{'Monday':1,'Tuesday':2,'Wednesday':3,'Thursday':4,'Friday':5,'Saturday':6,'Sunday':7}},
@@ -28,12 +36,14 @@ def get_processed_data():
         {'col':'AddressChange-Claim','mapping':{'no change':0,'under 6 months':1,'1 year':2,'2 to 3 years':3,'4 to 8 years':4}},
         {'col':'NumberOfCars','mapping':{'1 vehicle':1,'2 vehicles':2,'3 to 4':3,'5 to 8':4,'more than 8':5}}]
 
+
+
     ord_encoder = OrdinalEncoder(mapping = col_ordering, return_df=True)
     df2 = df.copy()
     df2 = ord_encoder.fit_transform(df2)
 
     ## Encoding nominal features
-    onehot = OneHotEncoder(cols=['Make', 'MaritalStatus', 'VehicleCategory', 'BasePolicy'], use_cat_names=True, return_df=True) 
+    onehot = OneHotEncoder(cols=["Make",'MaritalStatus', 'VehicleCategory', 'BasePolicy'], use_cat_names=True, return_df=True) 
     df3 = onehot.fit_transform(df2)
 
     df4 = df3.copy()
@@ -59,7 +69,10 @@ def get_processed_data():
         'Yes' : 1
         })
 
-
+    # df_binary_encoded = pd.get_dummies(df4['Make'], prefix='Make')
+    # df4 = pd.concat([df4, df_binary_encoded], axis=1)
+    # df4 = df4.drop('Make', axis=1)
+    
     df4.to_csv('processed_data.csv', index=False)
 
     X = df4.drop('FraudFound', axis=1)  # Features
