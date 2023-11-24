@@ -46,8 +46,9 @@ def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test):
 
     train_set = FSLDataset(train_df)
     validation_set = FSLDataset(validation_df)
+    test_set = FSLDataset(test_df)
 
-    return train_set, validation_set
+    return train_set, validation_set, test_df
 
 
 ## Method to help tuner get data
@@ -63,11 +64,11 @@ def get_datasets_for_tuner ():
 
 ## Represents one epoch / episode of multiple tasks
     ## Each epoch produces a new model
-def training_epoch (model: nn.Module, data_loader: DataLoader, optimizer: Optimizer, loss_fn, implementation = 'easyfsl'):
+def training_epoch (model: nn.Module, data_loader: DataLoader, optimizer: Optimizer, loss_fn, disable_tqdm = False, implementation = 'easyfsl'):
     all_loss = []
     model.train()
 
-    with tqdm(enumerate(data_loader), total = len(data_loader)) as tqdm_train:
+    with tqdm(enumerate(data_loader), total = len(data_loader), disable = disable_tqdm) as tqdm_train:
         ## For each task, make prediction, calculate loss, update model params
         for train_task, (support_data, support_labels, query_data, query_labels, _) in tqdm_train:
                        
@@ -79,9 +80,9 @@ def training_epoch (model: nn.Module, data_loader: DataLoader, optimizer: Optimi
 
             if implementation == 'easyfsl':
                 model.process_support_set(support_data, support_labels)
-                classification_scores = model.forward(query_data)
+                classification_scores = model(query_data)
             else:
-                classification_scores = model.forward(support_data, support_labels, query_data) ##TODO: Define method
+                classification_scores = model(support_data, support_labels, query_data)
             
 
             task_loss = loss_fn(classification_scores, query_labels)
@@ -96,14 +97,13 @@ def training_epoch (model: nn.Module, data_loader: DataLoader, optimizer: Optimi
 
 
 ## Method to evaluate model performance on few shot classification tasks
-def evaluate_model (model: nn.Module, data_loader: DataLoader, device = 'cpu'):
+def evaluate_model (model: nn.Module, data_loader: DataLoader, disable_tqdm = False, device = 'cpu'):
     actual_lst = []
     predicted_lst = []
-    f1_score = 0.0
 
     model.eval()
     with torch.no_grad():
-        with tqdm(enumerate(data_loader), total = len(data_loader)) as tqdm_eval:
+        with tqdm(enumerate(data_loader), total = len(data_loader), disable = disable_tqdm) as tqdm_eval:
             ## Loop through tasks
             for eval_task, (support_data, support_labels, query_data, query_labels, _) in tqdm_eval:
                 model.process_support_set(support_data, support_labels)
