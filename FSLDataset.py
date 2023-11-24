@@ -7,7 +7,7 @@ class FSLDataset (Dataset):
         self.dataframe = dataframe
         self.transformation = transformation
         self.label_idx = label_idx
-        print('Disclaimer: It is assumed that the label is the last column of the input dataframe... ...')
+        # print('Disclaimer: It is assumed that the label is the last column of the input dataframe... ...')
 
     def __len__ (self):
         return len(self.dataframe)
