@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 def get_processed_data():
     ## Global data preprocessing
     df = pd.read_csv("carclaims.csv")
-    df = df.drop(columns=['PolicyNumber',"PolicyType"])
+    df = df.drop(columns=['PolicyNumber',"PolicyType", "RepNumber"])
     df['Age'] =df['Age'].replace({0:16.5})
     df = df[df["MonthClaimed"]!='0']
     
