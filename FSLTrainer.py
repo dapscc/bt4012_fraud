@@ -1,3 +1,7 @@
+import numpy as np
+import random
+
+import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
@@ -21,6 +25,11 @@ class FSLTrainer:
 
     ## Main method for the whole training process, initialized with configured hyperparams
     def train (self, curr_config, metric = 'recall'):
+
+        random_seed = 42
+        np.random.seed(random_seed)
+        torch.manual_seed(random_seed)
+        random.seed(random_seed)
 
         n_way = 2
         n_shot = curr_config['n_shot']
@@ -75,15 +84,15 @@ class FSLTrainer:
             
             average_epoch_loss = training_epoch(model, train_loader, train_optimizer, loss_fn, disable_tqdm = True)
 
-            actuals, predictions, accuracy, precision, recall, specificity, f1_score = evaluate_model(model, validation_loader, disable_tqdm = True)
+            actuals, predictions, accuracy, precision, recall, specificity, f1_score, auc = evaluate_model(model, validation_loader, disable_tqdm = True)
             
             if metric == 'f1_score':
                 if f1_score > best_metrics.f1_score:
-                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
+                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score, auc)
                     best_state = model.state_dict()
             elif metric == 'recall':
                 if recall > best_metrics.recall:
-                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
+                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score, auc)
                     best_state = model.state_dict()
             else:
                 raise NotImplementedError
@@ -108,6 +117,11 @@ class FSLTrainer:
 
         assert 'n_shot' in self.config and 'embedding_size' in self.config
         assert type(self.config['n_shot']) == list and type(self.config['embedding_size']) == list
+
+        random_seed = 42
+        np.random.seed(random_seed)
+        torch.manual_seed(random_seed)
+        random.seed(random_seed)
 
         results = {} ## Key: Value = (k, embedding_size): (metric, model_params)
         best_config = ()
@@ -145,6 +159,11 @@ class FSLTrainer:
     ## Method to evaluate best model on test set
     def test (self, model_state, config):
 
+        random_seed = 42
+        np.random.seed(random_seed)
+        torch.manual_seed(random_seed)
+        random.seed(random_seed)
+        
         n_way = 2
         n_shot = config['n_shot']
         n_query = 10
@@ -164,8 +183,8 @@ class FSLTrainer:
 
         ## Evaluating the model
         test_metrics = FSLMetrics()
-        actuals, predictions, accuracy, precision, recall, specificity, f1_score = evaluate_model(model, test_loader)
-        test_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
+        actuals, predictions, accuracy, precision, recall, specificity, f1_score, auc = evaluate_model(model, test_loader)
+        test_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score, auc)
 
         ## Results
         # print('########### Test results ###########')
@@ -184,9 +203,10 @@ class FSLMetrics:
         self.recall = 0
         self.specificity = 0
         self.f1_score = 0
+        self.auc = 0
 
     def update (self, actuals, predictions, accuracy, precision, recall, 
-                specificity, f1_score):
+                specificity, f1_score, auc):
         self.actuals = actuals
         self.predictions = predictions
         self.accuracy = accuracy
@@ -194,3 +214,4 @@ class FSLMetrics:
         self.recall = recall
         self.specificity = specificity
         self.f1_score = f1_score
+        self.auc = auc
