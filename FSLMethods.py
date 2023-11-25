@@ -1,5 +1,3 @@
-import pandas as pd
-
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -12,6 +10,7 @@ from statistics import mean
 from show_metrics import show_metrics, get_metrics
 from get_processed_data import get_processed_data
 from sampling import undersample, oversample, smote
+from feature_selection import rf_select
 from FSLDataset import FSLDataset
 
 
@@ -30,18 +29,29 @@ def get_sampled_data (X, y, sampling_method):
 
 
 ## Form the required datasets
-def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test):
+def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test, feature_selection = False, sampling_method = None):
 
-    train_df = pd.DataFrame(X_train)
-    y_train = y_train.reset_index(drop = True)
+    if feature_selection == True:
+        ## Select features (indices) using random forest classifier
+        features_idx = rf_select(X_train, y_train)
+        X_train = X_train[features_idx]
+        X_val = X_val[features_idx]
+        X_test = X_test[features_idx]
+
+    ## Sampling
+    if sampling_method != None:
+        X_train, y_train = get_sampled_data(X_train, y_train, sampling_method)
+
+    train_df = X_train
+    y_train = y_train
     train_df['Fraud'] = y_train
 
-    validation_df = pd.DataFrame(X_val)
-    y_val = y_val.reset_index(drop = True)
+    validation_df = X_val
+    y_val = y_val
     validation_df['Fraud'] = y_val
 
-    test_df = pd.DataFrame(X_test)
-    y_test = y_test.reset_index(drop = True)
+    test_df = X_test
+    y_test = y_test
     test_df['Fraud'] = y_test
 
     train_set = FSLDataset(train_df)
@@ -49,17 +59,6 @@ def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test):
     test_set = FSLDataset(test_df)
 
     return train_set, validation_set, test_set
-
-
-## Method to help tuner get data
-## TODO: Look for better solutions...
-def get_datasets_for_tuner ():
-
-    _, X_train, y_train, X_val, y_val, X_test, y_test = get_processed_data()
-
-    train_set, validation_set = form_datasets(X_train, y_train, X_val, y_val, X_test, y_test)
-
-    return train_set, validation_set
 
 
 ## Represents one epoch / episode of multiple tasks
