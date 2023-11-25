@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 def get_processed_data():
     ## Global data preprocessing
     df = pd.read_csv("carclaims.csv")
-    df = df.drop(columns=['PolicyNumber',"PolicyType", "RepNumber"])
+    df = df.drop(columns=['PolicyNumber',"PolicyType"])
     df['Age'] =df['Age'].replace({0:16.5})
     df = df[df["MonthClaimed"]!='0']
     
@@ -84,10 +84,23 @@ def get_processed_data():
     print("Training set shape:", X_train.shape, y_train.shape)
     print("Validation set shape:", X_val.shape, y_val.shape)
     print("Test set shape:", X_test.shape, y_test.shape)
-
+    column_names= X_train.columns
+    
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
     X_val = scaler.transform(X_val)
     X_test = scaler.transform(X_test)
+
+    X_train = pd.DataFrame(X_train, columns = column_names)
+    y_train = y_train.reset_index(drop = True)
+    
+
+    X_val = pd.DataFrame(X_val, columns=column_names)
+    y_val = y_val.reset_index(drop = True)
+    
+
+    X_test = pd.DataFrame(X_test,columns=column_names)
+    y_test = y_test.reset_index(drop = True)
+    
 
     return df4, X_train, y_train, X_val, y_val, X_test, y_test
