@@ -42,7 +42,10 @@ def get_metrics(actual, predicted, pos_label = 'Yes', neg_label = 'No'):
     specificity = metrics.recall_score(actual, predicted, pos_label= neg_label)
     f1_score = metrics.f1_score(actual, predicted, pos_label = pos_label)
 
-    return accuracy, precision, recall, specificity, f1_score
+    fpr, tpr, thresholds = roc_curve(actual, predicted)
+    roc_auc = auc(fpr, tpr)
+
+    return accuracy, precision, recall, specificity, f1_score, roc_auc
 
 ### Ignore this (for Deep learning) 
 def show_metrics_DL(actual, predicted, samp, pos_label = 1, neg_label = 0):
