@@ -1,3 +1,6 @@
+import io
+import sys
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -29,8 +32,8 @@ def get_sampled_data (X, y, sampling_method):
 
 
 ## Form the required datasets
-def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test, feature_selection = False, sampling_method = None):
-
+def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test, feature_selection = False, sampling_method = ''):
+   
     if feature_selection == True:
         ## Select features (indices) using random forest classifier
         features_idx = rf_select(X_train, y_train)
@@ -39,7 +42,7 @@ def form_datasets (X_train, y_train, X_val, y_val, X_test, y_test, feature_selec
         X_test = X_test[features_idx]
 
     ## Sampling
-    if sampling_method != None:
+    if sampling_method != '':
         X_train, y_train = get_sampled_data(X_train, y_train, sampling_method)
 
     train_df = X_train

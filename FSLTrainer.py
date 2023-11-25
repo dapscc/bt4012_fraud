@@ -9,6 +9,7 @@ from easyfsl.methods import PrototypicalNetworks
 from FSLDataset import FSLDataset
 from FSLMethods import training_epoch, evaluate_model
 from FSLNetworks import FeatureExtractor
+from show_metrics import show_metrics
 
 
 class FSLTrainer:
@@ -63,13 +64,10 @@ class FSLTrainer:
 
         ## Train the model
         n_epochs = 10
-        actuals = []
-        predictions = []
 
         ## Track best parameters (weights and biases) and performance of model
         best_state = model.state_dict()
-        best_f1_score = 0.0
-        best_recall = 0.0
+        best_metrics = FSLMetrics()
 
         print(f'Training {n_shot}-shot classifier with size {curr_config["embedding_size"]} embedding... ...')
         for epoch in range(n_epochs):
@@ -77,21 +75,15 @@ class FSLTrainer:
             
             average_epoch_loss = training_epoch(model, train_loader, train_optimizer, loss_fn, disable_tqdm = True)
 
-            actuals, predictions, _, _, recall, _, f1_score = evaluate_model(model, validation_loader, disable_tqdm = True)
+            actuals, predictions, accuracy, precision, recall, specificity, f1_score = evaluate_model(model, validation_loader, disable_tqdm = True)
             
             if metric == 'f1_score':
-                if f1_score > best_f1_score:
-                    actuals = actuals
-                    predictions = predictions
-                    best_recall = recall
-                    best_f1_score = f1_score
+                if f1_score > best_metrics.f1_score:
+                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
                     best_state = model.state_dict()
             elif metric == 'recall':
-                if recall > best_recall:
-                    actuals = actuals
-                    predictions = predictions
-                    best_recall = recall
-                    best_f1_score = f1_score
+                if recall > best_metrics.recall:
+                    best_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
                     best_state = model.state_dict()
             else:
                 raise NotImplementedError
@@ -108,41 +100,44 @@ class FSLTrainer:
         # print(f'Best f1-score after {n_epochs} epochs of training: {best_f1_score}')
         # print(f'Best recall after {n_epochs} epochs of training: {best_recall}')
 
-        return model, best_f1_score, best_recall
+        return model, best_metrics
 
 
     ## Method to tune hyperparameters
-    def tune (self, metric = 'recall'):
+    def tune (self, metric = 'recall', show_metric = False):
 
         assert 'n_shot' in self.config and 'embedding_size' in self.config
         assert type(self.config['n_shot']) == list and type(self.config['embedding_size']) == list
 
         results = {} ## Key: Value = (k, embedding_size): (metric, model_params)
         best_config = ()
-        best_metric = 0
+        best_metrics = FSLMetrics()
 
         ## Manual grid search
         for curr_k in self.config['n_shot']:
             for curr_size in self.config['embedding_size']:
                 curr_config = {'n_shot': curr_k, 'embedding_size': curr_size}
-                curr_model, curr_f1_score, curr_recall = self.train(curr_config, metric)
+                curr_model, curr_metrics = self.train(curr_config, metric)
 
                 if metric == 'recall':
-                    if curr_recall > best_metric:
+                    if curr_metrics.recall > best_metrics.recall:
                         best_config = (curr_config['n_shot'], curr_config['embedding_size'])
-                        best_metric = curr_recall
+                        best_metrics = curr_metrics
                 elif metric == 'f1_score':
-                    if curr_f1_score > best_metric:
+                    if curr_metrics.f1_score > best_metrics.f1_score:
                         best_config = (curr_config['n_shot'], curr_config['embedding_size'])
-                        best_metric = curr_f1_score
+                        best_metrics = curr_metrics
                 else:
                     raise NotImplementedError
 
-                results[(curr_k, curr_size)] = (curr_recall if metric == 'recall' else curr_f1_score, curr_model.state_dict())
+                results[(curr_k, curr_size)] = (curr_metrics, curr_model.state_dict())
         
         print('########### Tuning complete ###########')
         print(f'Best trial config: k = {best_config[0]}, embedding size = {best_config[1]}')
-        print(f'Best trial validation {metric}: {best_metric}')
+        print(f'Best trial validation {metric}: {getattr(best_metrics, metric)}')
+
+        if show_metric == True:
+            show_metrics(actual = best_metrics.actuals, predicted = best_metrics.predictions, pos_label = 1, neg_label = 0)
 
         return results, best_config
     
@@ -168,11 +163,34 @@ class FSLTrainer:
         model.load_state_dict(model_state)
 
         ## Evaluating the model
-        actuals, predictions, _, _, recall, _, f1_score = evaluate_model(model, test_loader)
+        test_metrics = FSLMetrics()
+        actuals, predictions, accuracy, precision, recall, specificity, f1_score = evaluate_model(model, test_loader)
+        test_metrics.update(actuals, predictions, accuracy, precision, recall, specificity, f1_score)
 
         ## Results
-        print('########### Test results ###########')
-        print(f'F1-score: {f1_score}')
-        print(f'Recall: {recall}')
+        # print('########### Test results ###########')
+        # print(f'F1-score: {f1_score}')
+        # print(f'Recall: {recall}')
 
-        return actuals, predictions
+        return test_metrics
+    
+
+class FSLMetrics:
+    def __init__(self):
+        self.actuals = []
+        self.predictions = []
+        self.accuracy = 0
+        self.precision = 0
+        self.recall = 0
+        self.specificity = 0
+        self.f1_score = 0
+
+    def update (self, actuals, predictions, accuracy, precision, recall, 
+                specificity, f1_score):
+        self.actuals = actuals
+        self.predictions = predictions
+        self.accuracy = accuracy
+        self.precision = precision
+        self.recall = recall
+        self.specificity = specificity
+        self.f1_score = f1_score
