@@ -22,6 +22,5 @@ def rf_select(X_train, y_train):
     sel = SelectFromModel(RandomForestClassifier(), threshold= "0.5*mean")
     sel.fit(X_train, y_train)
     selected_feat= X_train.columns[(sel.get_support())]
-    print(len(selected_feat))
-    print(selected_feat)
+    # print(f"{len(selected_feat)} features selected: {selected_feat}")
     return selected_feat
